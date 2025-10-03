@@ -1,0 +1,236 @@
+@import "tailwindcss";
+
+:root {
+  --font-cairo: var(--font-cairo);
+  --font-tajawal: var(--font-tajawal);
+}
+
+* {
+  font-family: var(--font-cairo), var(--font-tajawal), sans-serif;
+}
+
+.slide {
+  display: none;
+}
+
+.slide.active {
+  display: block;
+}
+
+.nav-link {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 50%;
+  background-color: #8B5CF6;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.nav-link.active {
+  color: #8B5CF6 !important;
+}
+
+.nav-link.active::after {
+  width: 100% !important;
+  left: 0 !important;
+}
+
+.clients-carousel-wrapper {
+  overflow: hidden;
+  padding: 20px 0;
+  direction: ltr;
+  position: relative;
+}
+
+.clients-carousel-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scroll-seamless 30s linear infinite;
+  will-change: transform;
+}
+
+.clients-carousel-track:hover {
+  animation-play-state: paused;
+}
+
+.clients-carousel-item {
+  min-width: 220px;
+  width: 220px;
+  height: 140px;
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(88, 42, 110, 0.08);
+  border: 2px solid rgba(88, 42, 110, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.clients-carousel-item:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(88, 42, 110, 0.15);
+  border-color: rgba(228, 35, 123, 0.2);
+}
+
+@keyframes scroll-seamless {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-33.333%));
+  }
+}
+
+/* تحسينات الشريط العلوي */
+.sticky-header {
+  position: sticky;
+  top: 36px;
+  z-index: 1000;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background-color: rgb(255, 255, 255);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.sticky-header.scrolled {
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* تحسينات اللوجو */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 120px;
+  width: auto;
+  transition: transform 0.3s ease;
+  filter: brightness(1.1) contrast(1.1);
+  transform-origin: center;
+}
+
+.logo-img.logo-scrolled {
+  transform: scale(0.67);
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #8B5CF6;
+  margin-right: 12px;
+  transition: all 0.3s ease;
+}
+
+/* CTA Section Styles */
+.cta-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-gradient {
+  background: linear-gradient(135deg, rgba(87, 42, 110, 0.95) 0%, rgba(87, 42, 110, 0.9) 50%, rgba(228, 35, 123, 0.9) 100%);
+}
+
+.cta-wireframe-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.cta-wireframe-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  transition: all 0.5s ease;
+}
+
+.cta-wireframe-connection {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.3);
+  transform-origin: 0 0;
+  transition: all 0.5s ease;
+}
+
+.cta-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Floating animation for nodes */
+@keyframes floatNode {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(5px, -5px);
+  }
+  50% {
+    transform: translate(-3px, 3px);
+  }
+  75% {
+    transform: translate(2px, -2px);
+  }
+}
+
+.floating-node {
+  animation: floatNode 8s ease-in-out infinite;
+}
+
+.floating-node:nth-child(2n) {
+  animation-delay: -2s;
+}
+
+.floating-node:nth-child(3n) {
+  animation-delay: -4s;
+}
+
+.floating-node:nth-child(4n) {
+  animation-delay: -6s;
+}
+
+/* Footer Social Icons */
+.social-icon {
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-5px);
+}
+
+/* Integrated CTA-Footer Section */
+.integrated-cta-footer {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-footer-gradient {
+  background: linear-gradient(135deg, rgba(87, 42, 110, 0.95) 0%, rgba(87, 42, 110, 0.9) 50%, rgba(228, 35, 123, 0.9) 100%);
+}
