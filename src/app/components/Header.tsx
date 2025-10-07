@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import CartCounter from './CartCounter';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,6 +62,9 @@ export default function Header() {
             <Link href="/products" className={`nav-link text-gray-700 hover:text-purple-600 font-medium ${pathname === '/products' ? 'active' : ''}`}>
               المنتجات
             </Link>
+            <Link href="/store" className={`nav-link text-gray-700 hover:text-purple-600 font-medium ${pathname.startsWith('/store') ? 'active' : ''}`}>
+              المتجر
+            </Link>
 
             {/* Sectors Dropdown */}
             <div className="relative group px-4">
@@ -102,7 +106,8 @@ export default function Header() {
           </div>
 
           {/* CTA Buttons */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-4">
+            <CartCounter />
             <Link
               href="/contact"
               className="bg-white border-2 border-purple-600 text-purple-600 px-6 py-2 rounded-lg font-medium hover:bg-purple-600 hover:text-white transition-all duration-300"
@@ -147,6 +152,9 @@ export default function Header() {
               </Link>
               <Link href="/products" className="text-gray-700 hover:text-purple-600 font-medium px-2">
                 المنتجات
+              </Link>
+              <Link href="/store" className="text-gray-700 hover:text-purple-600 font-medium px-2">
+                المتجر
               </Link>
 
               {/* Mobile Sectors */}
