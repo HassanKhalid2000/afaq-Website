@@ -98,28 +98,70 @@ ${customerData.message ? `📝 رسالة إضافية من العميل:\n${cus
     // قم بالتسجيل في resend.com واحصل على API key
     
     // **تفعيل إرسال الإيميل مع Resend:**
-    if (process.env.RESEND_API_KEY) {
+    let emailSentStatus = false;
+    let emailError = null;
+    
+    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_test_key_placeholder') {
       const resend = new Resend(process.env.RESEND_API_KEY);
       
       try {
+        console.log('🔄 محاولة إرسال الإيميل عبر Resend...');
+        
         const { data, error } = await resend.emails.send({
-          from: 'noreply@afaqinfotech.com',
-          to: ['info@afaqinfotech.com'],
+          from: process.env.FROM_EMAIL || 'Onboarding <onboarding@resend.dev>',
+          to: [process.env.TO_EMAIL || 'info@afaqinfotech.com'],
           subject: `طلب جديد ${orderNumber} - ${customerData.fullName}`,
-          html: emailContent.replace(/\n/g, '<br>'),
+          html: `
+            <!DOCTYPE html>
+            <html dir="rtl" lang="ar">
+            <head>
+              <meta charset="utf-8">
+              <title>طلب جديد - آفاق</title>
+              <style>
+                body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #1f2937; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
+                .footer { background: #374151; color: white; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; }
+                .section { margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #3b82f6; }
+                .highlight { color: #1f2937; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🛒 طلب جديد من متجر آفاق</h1>
+                </div>
+                <div class="content">
+                  ${emailContent.replace(/\n/g, '<br>')}
+                </div>
+                <div class="footer">
+                  <p>هذا الإيميل تم إرساله تلقائياً من نظام آفاق المتكاملة</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
           text: emailContent,
         });
         
         if (error) {
-          console.error('Resend error:', error);
-          throw new Error('فشل في إرسال الإيميل');
+          console.error('❌ خطأ Resend:', error);
+          emailError = error;
+          throw new Error('فشل في إرسال الإيميل: ' + JSON.stringify(error));
         }
         
-        console.log('✅ تم إرسال الإيميل بنجاح!', data);
+        emailSentStatus = true;
+        console.log('✅ تم إرسال الإيميل بنجاح مع Resend!', data);
+        console.log('📧 ID الإيميل:', data?.id);
+        
       } catch (resendError) {
-        console.error('Resend API Error:', resendError);
-        // نستمر بالمحاكاة في حالة فشل Resend
+        console.error('❌ خطأ في Resend API:', resendError);
+        emailError = resendError;
+        emailSentStatus = false;
       }
+    } else {
+      console.log('⚠️ لم يتم تعيين RESEND_API_KEY، سيتم المحاكاة فقط');
     }
 
     // =========== المحاكاة الحالية ===========
@@ -146,7 +188,12 @@ ${customerData.message ? `📝 رسالة إضافية من العميل:\n${cus
     return NextResponse.json({
       success: true,
       orderNumber,
-      message: 'تم إرسال طلبك بنجاح! سيتم التواصل معك قريباً.'
+      message: emailSentStatus 
+        ? 'تم إرسال طلبك بنجاح! سيتم التواصل معك قريباً.' 
+        : 'تم استلام طلبك بنجاح! (الإيميل في وضع المحاكاة)',
+      emailSent: emailSentStatus,
+      emailError: emailError ? String(emailError) : null,
+      resendConfigured: !!process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_test_key_placeholder'
     });
 
   } catch (error) {

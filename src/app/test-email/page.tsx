@@ -1,142 +1,145 @@
 'use client';
+
 import { useState } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 export default function TestEmailPage() {
+  const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
 
-  const testEmail = async () => {
-    setLoading(true);
+  const testData = {
+    customerData: {
+      fullName: 'أحمد محمد السعد',
+      email: 'ahmed.test@example.com',
+      phone: '+966501234567',
+      message: 'هذا اختبار لنظام الإيميل'
+    },
+    cartItems: [
+      {
+        name: 'تصميم موقع ويب متجاوب',
+        quantity: 1,
+        price: 2500
+      },
+      {
+        name: 'نظام إدارة محتوى',
+        quantity: 1,
+        price: 1800
+      }
+    ],
+    totalPrice: 4300
+  };
+
+  const sendTestEmail = async () => {
+    setIsLoading(true);
     setResult(null);
-    
+
     try {
-      const response = await fetch('/api/test-email');
+      const response = await fetch('/api/send-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testData)
+      });
+
       const data = await response.json();
       setResult(data);
     } catch (error) {
-      setResult({ error: 'فشل في الاتصال بالخادم', details: error });
+      setResult({ error: 'خطأ في الاتصال: ' + error });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <main>
-      <Header />
-      
-      <section className="py-16 bg-gray-50 min-h-screen">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="bg-white rounded-3xl shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-              🧪 اختبار إرسال الإيميل
-            </h1>
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+            🧪 اختبار نظام الإيميل
+          </h1>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-              <h2 className="text-xl font-bold text-blue-800 mb-4">📋 حالة النظام الحالية</h2>
-              <div className="space-y-2 text-blue-700">
-                <p>• الإيميل حالياً في وضع <strong>المحاكاة</strong></p>
-                <p>• لتفعيل الإرسال الحقيقي، اتبع الخطوات أدناه</p>
-                <p>• الطلبات تظهر في Console Logs</p>
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  <strong>ملاحظة:</strong> هذا اختبار لنظام إرسال الإيميلات. سيتم إرسال إيميل تجريبي إلى العنوان المحدد في الإعدادات.
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="text-center mb-8">
-              <button
-                onClick={testEmail}
-                disabled={loading}
-                className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
-                  loading 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg'
-                } text-white`}
-              >
-                {loading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    جاري الاختبار...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane mr-2"></i>
-                    اختبار إرسال الإيميل
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">بيانات الاختبار:</h2>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto" dir="ltr">
+              {JSON.stringify(testData, null, 2)}
+            </pre>
+          </div>
 
-            {result && (
-              <div className={`rounded-xl p-6 mb-8 ${
-                result.error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
+          <button
+            onClick={sendTestEmail}
+            disabled={isLoading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-3"></div>
+                جاري إرسال الاختبار...
+              </div>
+            ) : (
+              '📧 إرسال إيميل اختبار'
+            )}
+          </button>
+
+          {result && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">نتيجة الاختبار:</h3>
+              <div className={`p-4 rounded-lg ${
+                result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
               }`}>
-                <h3 className={`text-lg font-bold mb-3 ${
-                  result.error ? 'text-red-800' : 'text-green-800'
-                }`}>
-                  {result.error ? '❌ خطأ في الاختبار' : '✅ نتيجة الاختبار'}
-                </h3>
-                <pre className="text-sm overflow-auto">
+                <pre className="text-sm overflow-auto" dir="ltr">
                   {JSON.stringify(result, null, 2)}
                 </pre>
               </div>
-            )}
 
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl p-8">
-              <h2 className="text-2xl font-bold mb-6">🚀 خطوات تفعيل الإرسال الحقيقي</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-bold mb-3">📧 الطريقة الأولى: Resend</h3>
-                  <ol className="space-y-2 text-sm">
-                    <li>1. سجل في <a href="https://resend.com" target="_blank" className="underline">resend.com</a></li>
-                    <li>2. احصل على API Key</li>
-                    <li>3. أضف في .env.local:</li>
-                    <li className="bg-black bg-opacity-20 p-2 rounded font-mono">
-                      RESEND_API_KEY=re_xxx...
-                    </li>
-                    <li>4. أعد تشغيل الخادم</li>
-                  </ol>
+              {result.success && (
+                <div className="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                  <div className="flex items-center">
+                    <span className="text-2xl ml-3">✅</span>
+                    <div>
+                      <strong>نجح الاختبار!</strong>
+                      <p className="text-sm mt-1">
+                        رقم الطلب: {result.orderNumber}<br/>
+                        {result.emailSent ? 'تم إرسال الإيميل فعلياً' : 'تم المحاكاة فقط'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <h3 className="text-lg font-bold mb-3">📬 الطريقة الثانية: Gmail</h3>
-                  <ol className="space-y-2 text-sm">
-                    <li>1. فعل 2FA في Gmail</li>
-                    <li>2. أنشئ App Password</li>
-                    <li>3. أضف في .env.local:</li>
-                    <li className="bg-black bg-opacity-20 p-2 rounded font-mono text-xs">
-                      GMAIL_USER=your@gmail.com<br/>
-                      GMAIL_APP_PASSWORD=xxxx
-                    </li>
-                    <li>4. فعل الكود في API</li>
-                  </ol>
+              {result.error && (
+                <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  <div className="flex items-center">
+                    <span className="text-2xl ml-3">❌</span>
+                    <div>
+                      <strong>فشل الاختبار!</strong>
+                      <p className="text-sm mt-1">{result.error}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="mt-6 bg-white bg-opacity-20 rounded-xl p-4">
-                <h4 className="font-bold mb-2">📁 ملفات مهمة:</h4>
-                <ul className="text-sm space-y-1">
-                  <li>• <code>/src/app/api/send-order/route.ts</code> - API الإرسال</li>
-                  <li>• <code>/.env.local</code> - إعدادات البيئة</li>
-                  <li>• <code>/EMAIL_SETUP.md</code> - دليل التفصيلي</li>
-                </ul>
-              </div>
+              )}
             </div>
+          )}
 
-            <div className="mt-8 text-center">
-              <a 
-                href="/store"
-                className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300"
-              >
-                <i className="fas fa-arrow-right"></i>
-                العودة إلى المتجر
-              </a>
-            </div>
+          <div className="mt-8 text-center">
+            <a 
+              href="/"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              ← العودة إلى المتجر
+            </a>
           </div>
         </div>
-      </section>
-
-      <Footer />
-    </main>
+      </div>
+    </div>
   );
 }
