@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PageHeader from '../components/PageHeader';
+import Toast from '../components/Toast';
 import { getProductById, Product } from '../data/products';
 
 interface CartItem extends Product {
@@ -28,6 +29,9 @@ export default function CheckoutPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
 
   useEffect(() => {
     loadCartItems();
@@ -85,7 +89,9 @@ export default function CheckoutPage() {
     }
 
     if (cartItems.length === 0) {
-      alert('السلة فارغة. يرجى إضافة منتجات قبل إتمام الطلب.');
+      setToastMessage('السلة فارغة. يرجى إضافة منتجات قبل إتمام الطلب.');
+      setToastType('error');
+      setShowToast(true);
       return;
     }
 
@@ -115,20 +121,20 @@ export default function CheckoutPage() {
       localStorage.removeItem('afaq-cart');
 
       // عرض رسالة النجاح
-      alert(`تم إرسال طلبك بنجاح!
+      setToastMessage(`تم إرسال طلبك بنجاح! شكراً لك ${customerData.fullName}. سيقوم فريق المبيعات بالتواصل معك خلال 24 ساعة. رقم الطلب: ${result.orderNumber}`);
+      setToastType('success');
+      setShowToast(true);
 
-شكراً لك ${customerData.fullName}
-
-سيقوم فريق المبيعات بالتواصل معك خلال 24 ساعة على الرقم ${customerData.phone} أو البريد الإلكتروني ${customerData.email}
-
-رقم الطلب: ${result.orderNumber}`);
-
-      // التوجه إلى صفحة تأكيد
-      router.push('/order-success');
+      // التوجه إلى صفحة تأكيد بعد 3 ثواني
+      setTimeout(() => {
+        router.push('/order-success');
+      }, 3000);
 
     } catch (error) {
       console.error('Error submitting order:', error);
-      alert('حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة.');
+      setToastMessage('حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة.');
+      setToastType('error');
+      setShowToast(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -173,6 +179,13 @@ export default function CheckoutPage() {
 
   return (
     <main>
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
       <Header />
       <PageHeader 
         title="إتمام الطلب"
@@ -289,9 +302,10 @@ export default function CheckoutPage() {
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={item.image} 
+                        <img
+                          src={item.image}
                           alt={item.name}
+                          loading="lazy"
                           className="w-12 h-12 object-cover rounded-lg"
                         />
                         <div>

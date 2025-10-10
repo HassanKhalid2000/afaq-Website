@@ -22,81 +22,6 @@ export async function POST(request: NextRequest) {
       `• ${item.name} - الكمية: ${item.quantity} - السعر الفردي: ${item.price} ر.س - المجموع: ${item.price * item.quantity} ر.س`
     ).join('\n');
 
-    const emailContent = `
-طلب جديد من متجر آفاق المتكاملة لتكنولوجيا المعلومات
-
-═══════════════════════════════════════════════════════════════
-
-📋 معلومات الطلب:
-رقم الطلب: ${orderNumber}
-تاريخ الطلب: ${orderDate}
-الوقت: ${new Date().toLocaleTimeString('ar-SA')}
-
-═══════════════════════════════════════════════════════════════
-
-👤 بيانات العميل:
-الاسم الكامل: ${customerData.fullName}
-البريد الإلكتروني: ${customerData.email}
-رقم الهاتف: ${customerData.phone}
-
-═══════════════════════════════════════════════════════════════
-
-🛒 تفاصيل الطلب:
-${orderDetails}
-
-═══════════════════════════════════════════════════════════════
-
-💰 ملخص المالي:
-المجموع الكلي: ${totalPrice.toLocaleString()} ر.س
-
-═══════════════════════════════════════════════════════════════
-
-${customerData.message ? `📝 رسالة إضافية من العميل:\n${customerData.message}\n\n═══════════════════════════════════════════════════════════════\n\n` : ''}
-
-🔔 الإجراءات المطلوبة:
-1. التواصل مع العميل خلال 24 ساعة
-2. تأكيد تفاصيل الطلب
-3. ترتيب عملية الدفع
-4. تفعيل الخدمات بعد تأكيد الدفع
-
-═══════════════════════════════════════════════════════════════
-
-هذا الإيميل تم إرساله تلقائياً من متجر آفاق الإلكتروني
-تاريخ الإرسال: ${new Date().toLocaleString('ar-SA')}
-    `;
-
-    // **اختر إحدى الطرق التالية لإرسال الإيميل:**
-
-    // =========== الطريقة الأولى: Gmail SMTP ===========
-    // تحتاج إلى إنشاء App Password من Google Account
-    /*
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: 'your-email@gmail.com',        // ضع إيميلك هنا
-        pass: 'your-app-password',           // ضع App Password هنا
-      },
-    });
-    */
-
-    // =========== الطريقة الثانية: SMTP مخصص ===========
-    // إذا كان لديك خادم SMTP خاص
-    /*
-    const transporter = nodemailer.createTransporter({
-      host: 'smtp.your-domain.com',         // خادم SMTP الخاص بك
-      port: 587,                            // المنفذ (587 للTLS، 465 للSSL)
-      secure: false,                        // true للمنفذ 465، false لباقي المنافذ
-      auth: {
-        user: 'noreply@afaqinfotech.com',   // إيميل الإرسال
-        pass: 'your-smtp-password',         // كلمة مرور SMTP
-      },
-    });
-    */
-
-    // =========== الطريقة الثالثة: استخدام Resend (الأفضل) ===========
-    // سهل الاستخدام ومجاني للاستخدام المحدود
-    // قم بالتسجيل في resend.com واحصل على API key
-    
     // **إرسال الإيميل مع Resend:**
     let emailSentStatus = false;
     let emailError = null;
@@ -107,8 +32,6 @@ ${customerData.message ? `📝 رسالة إضافية من العميل:\n${cus
       const resend = new Resend(process.env.RESEND_API_KEY);
 
       try {
-        console.log('🔄 محاولة إرسال الإيميل عبر Resend...');
-
         // Internal email (to AFAQ - info@afaqinfotech.com)
         const internalHtml = `
             <!DOCTYPE html>
@@ -252,17 +175,14 @@ ${customerData.message ? `📝 رسالة إضافية من العميل:\n${cus
           to: [process.env.TO_EMAIL || 'info@afaqinfotech.com'],
           subject: `🛒 طلب جديد ${orderNumber} - ${customerData.fullName}`,
           html: internalHtml,
-          text: emailContent,
           reply_to: customerData.email,
         });
 
         if (internalError) {
-          console.error('❌ خطأ Resend (internal):', internalError);
           emailError = internalError;
           throw new Error('فشل في إرسال الإيميل الداخلي: ' + JSON.stringify(internalError));
         }
         internalEmailSent = true;
-        console.log('✅ تم إرسال الإيميل الداخلي بنجاح إلى info@afaqinfotech.com!', internalData);
 
         // Customer confirmation email
         const customerText = `مرحبا ${customerData.fullName},\n\nتم استلام طلبك بنجاح.\nرقم الطلب: ${orderNumber}\nالتاريخ: ${orderDate}\nالمجموع: ${totalPrice.toLocaleString()} ر.س\n\nسنقوم بالتواصل معك خلال 24 ساعة.\n\nشكراً لثقتكم،\nفريق آفاق المتكاملة`;
@@ -404,41 +324,17 @@ ${customerData.message ? `📝 رسالة إضافية من العميل:\n${cus
         });
 
         if (customerError) {
-          console.error('❌ خطأ Resend (customer):', customerError);
-          // Don't throw error here - internal email is more important
           emailError = customerError;
         } else {
           customerEmailSent = true;
-          console.log('✅ تم إرسال إيميل التأكيد للعميل بنجاح!', customerDataResp);
         }
 
-        emailSentStatus = internalEmailSent; // Success if internal email sent
+        emailSentStatus = internalEmailSent;
       } catch (resendError) {
-        console.error('❌ خطأ في Resend API:', resendError);
         emailError = resendError;
         emailSentStatus = false;
       }
-    } else {
-      console.log('⚠️ لم يتم تعيين RESEND_API_KEY، سيتم المحاكاة فقط');
-      console.log('📧 محاكاة إرسال إيميل داخلي إلى info@afaqinfotech.com');
-      console.log('محتوى الإيميل الداخلي:', emailContent);
-      console.log('📧 محاكاة إرسال تأكيد للعميل إلى:', customerData.email);
     }
-
-    // محاكاة تأخير الشبكة
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // =========== إرسال الإيميل الفعلي ===========
-    // أزل التعليق من إحدى الطرق أعلاه واستخدمها
-    /*
-    await transporter.sendMail({
-      from: '"متجر آفاق" <noreply@afaqinfotech.com>',
-      to: 'info@afaqinfotech.com',
-      subject: `طلب جديد ${orderNumber} - ${customerData.fullName}`,
-      text: emailContent,
-      html: emailContent.replace(/\n/g, '<br>'), // تحويل إلى HTML
-    });
-    */
 
     return NextResponse.json({
       success: true,

@@ -1,16 +1,26 @@
 'use client';
-import { useState } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import PageHeader from '../components/PageHeader';
-import Toast from '../components/Toast';
-import { categories, getProductsByCategory, Product } from '../data/products';
+import { useState, use } from 'react';
+import Header from '../../../components/Header';
+import Footer from '../../../components/Footer';
+import PageHeader from '../../../components/PageHeader';
+import Toast from '../../../components/Toast';
+import { getCategoryBySlug, getProductsByCategory, Product } from '../../../data/products';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export default function StorePage() {
+export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = use(params);
   const [cart, setCart] = useState<{[key: string]: number}>({});
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  const category = getCategoryBySlug(resolvedParams.slug);
+
+  if (!category) {
+    notFound();
+  }
+
+  const products = getProductsByCategory(resolvedParams.slug);
 
   const addToCart = (productId: string) => {
     setCart(prev => ({
@@ -125,73 +135,70 @@ export default function StorePage() {
       )}
       <Header />
       <PageHeader
-        title="متجر آفاق"
-        subtitle="اكتشف مجموعتنا المتميزة من خدمات الاستضافة والحلول التقنية"
+        title={category.name}
+        subtitle={category.description}
         breadcrumb={[
           { label: "الرئيسية", href: "/" },
-          { label: "المتجر", href: "/store" }
+          { label: "المتجر", href: "/store" },
+          { label: category.name, href: `/store/category/${category.slug}` }
         ]}
       />
 
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-6">
-          {/* Cart Summary */}
+          {/* Header */}
           <div className="mb-12 flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-gray-800">تصفح حسب الفئة</h2>
-            <Link
-              href="/cart"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full hover:shadow-lg transition-all duration-300 flex items-center gap-2"
-            >
-              <i className="fas fa-shopping-cart"></i>
-              السلة ({getCartItemCount()})
-            </Link>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-white text-2xl">
+                <i className={`fas ${category.icon}`}></i>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">{category.name}</h2>
+                <p className="text-gray-600">
+                  {products.length} {products.length === 1 ? 'منتج' : 'منتجات'} متاحة
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/store"
+                className="bg-white border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300 flex items-center gap-2"
+              >
+                <i className="fas fa-arrow-right"></i>
+                العودة للمتجر
+              </Link>
+              <Link
+                href="/cart"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+              >
+                <i className="fas fa-shopping-cart"></i>
+                السلة ({getCartItemCount()})
+              </Link>
+            </div>
           </div>
 
-          {/* Categories with Products */}
-          {categories.map((category) => {
-            const categoryProducts = getProductsByCategory(category.slug);
-            const displayProducts = categoryProducts.slice(0, 3);
-
-            return (
-              <div key={category.id} className="mb-16">
-                {/* Category Header */}
-                <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-purple-200">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-white text-2xl">
-                      <i className={`fas ${category.icon}`}></i>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-800">{category.name}</h3>
-                      <p className="text-gray-600">{category.description}</p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/store/category/${category.slug}`}
-                    className="bg-white border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-purple-600 hover:text-white transition-all duration-300 flex items-center gap-2"
-                  >
-                    اعرض المزيد
-                    <i className="fas fa-arrow-left"></i>
-                  </Link>
-                </div>
-
-                {/* Products Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {displayProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-
-                {/* Show count of remaining products */}
-                {categoryProducts.length > 3 && (
-                  <div className="mt-6 text-center">
-                    <p className="text-gray-600">
-                      و <span className="font-bold text-purple-600">{categoryProducts.length - 3}</span> منتجات أخرى في هذه الفئة
-                    </p>
-                  </div>
-                )}
+          {/* Products Grid */}
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="text-6xl text-gray-300 mb-4">
+                <i className="fas fa-box-open"></i>
               </div>
-            );
-          })}
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">لا توجد منتجات في هذه الفئة</h3>
+              <p className="text-gray-600 mb-6">تحقق مرة أخرى لاحقاً للحصول على منتجات جديدة</p>
+              <Link
+                href="/store"
+                className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-lg transition-all duration-300"
+              >
+                تصفح جميع المنتجات
+              </Link>
+            </div>
+          )}
 
           {/* CTA Section */}
           <div className="mt-16 text-center bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-12 text-white">
